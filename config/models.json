@@ -1,0 +1,21 @@
+{
+  "default_profile": "sonnet",
+  "profiles": {
+    "deepseek-flash": {
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "base_url": "https://api.deepseek.com",
+      "api_key_env": "DEEPSEEK_API_KEY"
+    },
+    "sonnet": {
+      "provider": "bedrock",
+      "model": "global.anthropic.claude-sonnet-4-6",
+      "region": "us-east-2"
+    },
+    "nova": {
+      "provider": "bedrock",
+      "model": "global.amazon.nova-2-lite-v1:0",
+      "region": "us-east-2"
+    }
+  }
+}

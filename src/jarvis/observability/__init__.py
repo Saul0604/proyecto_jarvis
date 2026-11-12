@@ -1,0 +1,1 @@
+"""Eventos, errores y consumo."""

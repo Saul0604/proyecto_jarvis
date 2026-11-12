@@ -1,0 +1,1 @@
+"""Contexto y memoria persistente."""

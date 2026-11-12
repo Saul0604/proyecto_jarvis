@@ -1,0 +1,1 @@
+"""Autorización de acciones."""

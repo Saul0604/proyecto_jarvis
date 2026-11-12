@@ -1,0 +1,24 @@
+{
+  "interface": "cli",
+  "language": "es",
+  "storage": {
+    "database_path": "var/jarvis.sqlite3"
+  },
+  "agent": {
+    "max_steps": 10,
+    "task_timeout_seconds": 120,
+    "max_output_tokens_per_call": 2048
+  },
+  "permissions": {
+    "files": {
+      "allowed_roots": [],
+      "read_only": true
+    },
+    "web": {
+      "enabled": false
+    }
+  },
+  "observability": {
+    "log_message_content": false
+  }
+}
