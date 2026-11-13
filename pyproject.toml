@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Asistente modular con modelos intercambiables"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = ["boto3>=1.40"]
+dependencies = ["boto3>=1.40", "jsonschema>=4.19,<5"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

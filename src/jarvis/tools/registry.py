@@ -1,5 +1,7 @@
 """Registra únicamente herramientas habilitadas por el usuario."""
+from copy import deepcopy
 from dataclasses import dataclass
+from jarvis.tools.validation import validate_schema
 from functools import partial
 from pathlib import Path
 from typing import Callable
@@ -28,6 +30,10 @@ class ToolRegistry:
             raise ValueError(f"Herramienta duplicada: {name}")
         schema = {"type": "object", "properties": properties,
                   "required": required, "additionalProperties": False}
+        validate_schema(schema)
+        if not callable(handler):
+            raise ValueError("La herramienta necesita un handler invocable.")
+        schema = deepcopy(schema)
         self.tools[name] = RegisteredTool(ToolDefinition(name, description, schema), handler)
 
     @property

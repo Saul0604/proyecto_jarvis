@@ -1,1 +1,1 @@
-"""Espacio para la futura interfaz de voz."""
+"""Síntesis de voz local de Microsoft Windows."""

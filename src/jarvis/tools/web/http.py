@@ -1,4 +1,5 @@
 """HTTP público acotado, con IP validada y fijada durante cada conexión."""
+from jarvis.tools.errors import ResourceLimitError, NetworkError
 import http.client
 import ipaddress
 import socket
@@ -47,7 +48,7 @@ def get_public(url: str, headers: dict | None = None):
                 headers = None  # No reenviar credenciales de búsqueda a otra URL.
                 continue
             if response.status != 200:
-                raise ValueError(f"El sitio respondió HTTP {response.status}.")
+                raise NetworkError(f"El sitio respondió HTTP {response.status}.")
             if response.getheader("Content-Encoding", "identity") != "identity":
                 raise ValueError("El sitio devolvió una compresión no admitida.")
             chunks = []
@@ -64,7 +65,7 @@ def get_public(url: str, headers: dict | None = None):
                 chunks.append(chunk)
                 size += len(chunk)
             if size > MAX_BYTES:
-                raise ValueError("La página supera el límite de 1 MB.")
+                raise ResourceLimitError("La página supera el límite de 1 MB.")
             return url, response.getheader("Content-Type", ""), b"".join(chunks)
         finally:
             connection.close()

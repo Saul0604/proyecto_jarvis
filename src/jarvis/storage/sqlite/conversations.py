@@ -32,6 +32,18 @@ class ConversationStore:
                     provider TEXT NOT NULL,
                     created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
                 );
+                CREATE TABLE IF NOT EXISTS task_events (
+                    id INTEGER PRIMARY KEY, session TEXT NOT NULL, task_id TEXT NOT NULL,
+                    event TEXT NOT NULL,
+                    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+                );
+                CREATE TABLE IF NOT EXISTS model_calls (
+                    id INTEGER PRIMARY KEY,
+                    session TEXT NOT NULL, task_id TEXT NOT NULL, phase TEXT NOT NULL,
+                    model TEXT NOT NULL, provider TEXT, status TEXT NOT NULL,
+                    duration_ms INTEGER NOT NULL, input_tokens INTEGER, output_tokens INTEGER,
+                    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+                );
                 CREATE TABLE IF NOT EXISTS memory_summaries (
                     session TEXT PRIMARY KEY REFERENCES memory_sessions(name),
                     content TEXT NOT NULL,
@@ -121,6 +133,8 @@ class ConversationStore:
             connection.execute("UPDATE memory_sessions SET revision=revision+1 WHERE name=?", (session,))
             connection.execute("DELETE FROM memory_turns WHERE session=?", (session,))
             connection.execute("DELETE FROM memory_summaries WHERE session=?", (session,))
+            connection.execute("DELETE FROM model_calls WHERE session=?", (session,))
+            connection.execute("DELETE FROM task_events WHERE session=?", (session,))
 
 
     def summary(self, session):
@@ -177,3 +191,21 @@ class ConversationStore:
             connection.execute(
                 "DELETE FROM memory_turns WHERE session=? AND id<=?", (session, through_id)
             )
+
+    def record_call(self, session, task_id, phase, model, provider, status, duration_ms, usage):
+        with closing(self.connect()) as connection, connection:
+            connection.execute(
+                "INSERT INTO model_calls(session,task_id,phase,model,provider,status,duration_ms,input_tokens,output_tokens) VALUES (?,?,?,?,?,?,?,?,?)",
+                (session, task_id, phase, model, provider, status, duration_ms,
+                 usage.input_tokens if usage else None, usage.output_tokens if usage else None))
+
+    def usage(self, session):
+        with closing(self.connect()) as connection:
+            return [dict(row) for row in connection.execute(
+                "SELECT task_id,phase,model,provider,status,duration_ms,input_tokens,output_tokens FROM model_calls WHERE session=? ORDER BY id",
+                (session,))]
+
+    def record_event(self, session, task_id, event):
+        with closing(self.connect()) as connection, connection:
+            connection.execute("INSERT INTO task_events(session,task_id,event) VALUES (?,?,?)",
+                               (session, task_id, event))

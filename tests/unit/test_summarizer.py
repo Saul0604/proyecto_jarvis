@@ -4,6 +4,7 @@ import json
 import sqlite3
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 
 from jarvis.domain.messages import Message, ModelResponse, Role, FinishReason
@@ -88,7 +89,7 @@ class SummarizerTests(unittest.TestCase):
 
     def test_old_database_is_upgraded_without_losing_turns(self):
         path = Path(self.temp.name) / "old.sqlite3"
-        with sqlite3.connect(path) as connection:
+        with closing(sqlite3.connect(path)) as connection, connection:
             connection.executescript("""
                 CREATE TABLE memory_sessions(name TEXT PRIMARY KEY, revision INTEGER NOT NULL DEFAULT 0);
                 CREATE TABLE memory_turns(id INTEGER PRIMARY KEY, session TEXT, prompt TEXT, reply TEXT,

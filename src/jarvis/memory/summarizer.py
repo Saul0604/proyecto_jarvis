@@ -22,6 +22,21 @@ INSTRUCTIONS = (
 )
 
 
+def transcript_chunks(transcript):
+    """Prefiere límites de turnos; divide únicamente turnos mayores al presupuesto."""
+    pending = ""
+    for line in transcript.splitlines(keepends=True):
+        if pending and len(pending) + len(line) > CHUNK_CHARACTERS:
+            yield pending
+            pending = ""
+        while len(line) > CHUNK_CHARACTERS:
+            yield line[:CHUNK_CHARACTERS]
+            line = line[CHUNK_CHARACTERS:]
+        pending += line
+    if pending:
+        yield pending
+
+
 async def compact_if_needed(store, session, provider, model):
     """Guarda y elimina originales únicamente tras completar todo el resumen."""
     plan = store.compaction_plan(session)
@@ -35,14 +50,14 @@ async def compact_if_needed(store, session, provider, model):
     )
     try:
         async with asyncio.timeout(120):
-            for offset in range(0, len(transcript), CHUNK_CHARACTERS):
+            for fragment in transcript_chunks(transcript):
                 request = ModelRequest(
                     model,
                     (
                         Message(Role.SYSTEM, INSTRUCTIONS),
                         Message(Role.USER, json.dumps({
                             "resumen_anterior": summary,
-                            "fragmento": transcript[offset:offset + CHUNK_CHARACTERS],
+                            "fragmento": fragment,
                         }, ensure_ascii=False)),
                     ),
                     max_output_tokens=2048,
